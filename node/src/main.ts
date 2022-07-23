@@ -17,6 +17,8 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { useSqliteTraceHook } from './sqltrace'
 
+import { getPlayerRanking } from './use-case/get-player-ranking'
+
 const exec = util.promisify(childProcess.exec)
 const flock = util.promisify(fsExt.flock)
 
@@ -545,36 +547,6 @@ async function billingReportByCompetition(
   }
 
   const billingMap: { [playerId: string]: 'player' | 'visitor' } = {}
-  // let visitors = 0, players = 0;
-  // if(comp.finished_at) {
-  //   let query: string, array: [number, string, number?];
-  //   if (comp.finished_at === null){
-  //     query = 'SELECT player_id AS visitor_ids FROM visit_history WHERE tenant_id = ? AND competition_id = ?  GROUP BY player_id';
-  //     array = [tenantId, comp.id];
-  //   }else{
-  //     query = 'SELECT player_id AS visitor_ids FROM visit_history WHERE tenant_id = ? AND competition_id = ? AND created_at <= ?  GROUP BY player_id';
-  //     array = [tenantId, comp.id, comp.finished_at];
-  //   }
-  //   const [query_visitors] = await adminDB.query<(VisitHistorySummaryRow & RowDataPacket)[]>(query, array)
-
-  //   const query_players = await tenantDB.all<({ player_id: string })[]>(
-  //     'SELECT DISTINCT(player_id) as player_id FROM player_score WHERE tenant_id = ? AND competition_id = ?',
-  //     [tenantId, comp.id]
-  //   )
-  //   const players_array = query_players.map(player => player.player_id);
-  //   let visitors_array = query_visitors;
-
-  //   visitors_array = visitors_array.filter((visitor) => {
-  //     return players_array.includes(visitor.player_id);
-  //   });
-
-  //   visitors = visitors_array.length;
-  //   players = players_array.length;
-  // }
-  // console.log("visitors: "+JSON.stringify(query_visitors));
-  // console.log("players: "+JSON.stringify(query_players));
-  // console.log("visitors[0]: "+visitors);
-  // console.log("players[0]: "+players);
 
   // ランキングにアクセスした参加者のIDを取得する
   const [vhs] = await adminDB.query<(VisitHistorySummaryRow & RowDataPacket)[]>(
@@ -595,7 +567,33 @@ async function billingReportByCompetition(
   const unlock = await flockByTenantID(tenantId)
   // ToDo possible query unite?
   try {
-    // スコアを登録した参加者のIDを取得する
+    // let visitors = 0, players = 0;
+    // if(comp.finished_at) {
+    //   let query: string, array: [number, string, number?];
+    //   if (comp.finished_at === null){
+    //     query = 'SELECT player_id AS visitor_ids FROM visit_history WHERE tenant_id = ? AND competition_id = ?  GROUP BY player_id';
+    //     array = [tenantId, comp.id];
+    //   }else{
+    //     query = 'SELECT player_id AS visitor_ids FROM visit_history WHERE tenant_id = ? AND competition_id = ? AND created_at <= ?  GROUP BY player_id';
+    //     array = [tenantId, comp.id, comp.finished_at];
+    //   }
+    //   const [query_visitors] = await adminDB.query<(VisitHistorySummaryRow & RowDataPacket)[]>(query, array)
+  
+    //   const query_players = await tenantDB.all<({ player_id: string })[]>(
+    //     'SELECT DISTINCT(player_id) as player_id FROM player_score WHERE tenant_id = ? AND competition_id = ?',
+    //     tenantId, comp.id
+    //   )
+    //   const players_array = query_players.map(player => player.player_id);
+    //   let visitors_array = query_visitors;
+  
+    //   visitors_array = visitors_array.filter((visitor) => {
+    //     return players_array.includes(visitor.player_id);
+    //   });
+  
+    //   visitors = visitors_array.length;
+    //   players = players_array.length;
+    // }
+    //スコアを登録した参加者のIDを取得する
     const scoredPlayerIds = await tenantDB.all<{ player_id: string }[]>(
       'SELECT DISTINCT(player_id) FROM player_score WHERE tenant_id = ? AND competition_id = ?',
       tenantId,
@@ -1358,124 +1356,7 @@ app.get(
 // 大会ごとのランキングを取得する
 app.get(
   '/api/player/competition/:competitionId/ranking',
-  wrap(async (req: Request, res: Response) => {
-    try {
-      const viewer = await parseViewer(req)
-      if (viewer.role !== RolePlayer) {
-        throw new ErrorWithStatus(403, 'role player required')
-      }
-
-      const { competitionId } = req.params
-      if (!competitionId) {
-        throw new ErrorWithStatus(400, 'competition_id is required')
-      }
-
-      let cd: CompetitionDetail
-      const ranks: CompetitionRank[] = []
-      const tenantDB = await connectToTenantDB(viewer.tenantId)
-      try {
-        const error = await authorizePlayer(tenantDB, viewer.playerId)
-        if (error) {
-          throw error
-        }
-
-        const competition = await retrieveCompetition(tenantDB, competitionId)
-        if (!competition) {
-          throw new ErrorWithStatus(404, 'competition not found')
-        }
-        cd = {
-          id: competition.id,
-          title: competition.title,
-          is_finished: !!competition.finished_at,
-        }
-
-        const now = Math.floor(new Date().getTime() / 1000)
-        const [[tenant]] = await adminDB.query<(TenantRow & RowDataPacket)[]>('SELECT * FROM tenant WHERE id = ?', [
-          viewer.tenantId,
-        ])
-
-        await adminDB.execute<OkPacket>(
-          'INSERT INTO visit_history (player_id, tenant_id, competition_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-          [viewer.playerId, tenant.id, competitionId, now, now]
-        )
-
-        const { rank_after: rankAfterStr } = req.query
-        let rankAfter: number
-        if (rankAfterStr) {
-          rankAfter = parseInt(rankAfterStr.toString(), 10)
-        }
-
-        // player_scoreを読んでいるときに更新が走ると不整合が起こるのでロックを取得する
-        const unlock = await flockByTenantID(tenant.id)
-        try {
-          const pss = await tenantDB.all<PlayerScoreRow[]>(
-            'SELECT * FROM player_score WHERE tenant_id = ? AND competition_id = ? ORDER BY row_num DESC',
-            tenant.id,
-            competition.id
-          )
-
-          const scoredPlayerSet: { [player_id: string]: number } = {}
-          const tmpRanks: (CompetitionRank & WithRowNum)[] = []
-          for (const ps of pss) {
-            // player_scoreが同一player_id内ではrow_numの降順でソートされているので
-            // 現れたのが2回目以降のplayer_idはより大きいrow_numでスコアが出ているとみなせる
-            if (scoredPlayerSet[ps.player_id]) {
-              continue
-            }
-            scoredPlayerSet[ps.player_id] = 1
-            const p = await retrievePlayer(tenantDB, ps.player_id)
-            if (!p) {
-              throw new Error('error retrievePlayer')
-            }
-
-            tmpRanks.push({
-              rank: 0,
-              score: ps.score,
-              player_id: p.id,
-              player_display_name: p.display_name,
-              row_num: ps.row_num,
-            })
-          }
-
-          tmpRanks.sort((a, b) => {
-            if (a.score === b.score) {
-              return a.row_num < b.row_num ? -1 : 1
-            }
-            return a.score > b.score ? -1 : 1
-          })
-
-          tmpRanks.forEach((rank, index) => {
-            if (index < rankAfter) return
-            if (ranks.length >= 100) return
-            ranks.push({
-              rank: index + 1,
-              score: rank.score,
-              player_id: rank.player_id,
-              player_display_name: rank.player_display_name,
-            })
-          })
-        } finally {
-          unlock()
-        }
-      } finally {
-        tenantDB.close()
-      }
-
-      const data: CompetitionRankingResult = {
-        competition: cd,
-        ranks,
-      }
-      res.status(200).json({
-        status: true,
-        data,
-      })
-    } catch (error: any) {
-      if (error.status) {
-        throw error // rethrow
-      }
-      throw new ErrorWithStatus(500, error)
-    }
-  })
+  wrap(getPlayerRanking)
 )
 
 // 参加者向けAPI
