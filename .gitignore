@@ -1,0 +1,16 @@
+sqlite-trace.log
+docker-compose-go.yml
+docker-compose-java.yml
+docker-compose-perl.yml
+docker-compose-php.yml
+docker-compose-python.yml
+docker-compose-ruby.yml
+docker-compose-rust.yml
+go/
+java/
+perl/
+php/
+python/
+ruby/
+rust/
+tenant_db/
