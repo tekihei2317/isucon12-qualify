@@ -542,14 +542,18 @@ async function billingReportByCompetition(
     throw Error('error retrieveCompetition on billingReportByCompetition')
   }
 
+  const billingMap: { [playerId: string]: 'player' | 'visitor' } = {}
+
   // ランキングにアクセスした参加者のIDを取得する
   const [vhs] = await adminDB.query<(VisitHistorySummaryRow & RowDataPacket)[]>(
     'SELECT player_id, MIN(created_at) AS min_created_at FROM visit_history WHERE tenant_id = ? AND competition_id = ? GROUP BY player_id',
     [tenantId, comp.id]
   )
 
-  const billingMap: { [playerId: string]: 'player' | 'visitor' } = {}
   // ToDo remove for
+
+  // if (comp.finished_at == null) {
+  // }
   for (const vh of vhs) {
     // competition.finished_atよりもあとの場合は、終了後に訪問したとみなして大会開催内アクセス済みとみなさない
     if (comp.finished_at !== null && comp.finished_at < vh.min_created_at) {
@@ -560,6 +564,7 @@ async function billingReportByCompetition(
 
   // player_scoreを読んでいるときに更新が走ると不整合が起こるのでロックを取得する
   const unlock = await flockByTenantID(tenantId)
+  // ToDo possible query unite?
   try {
     // スコアを登録した参加者のIDを取得する
     const scoredPlayerIds = await tenantDB.all<{ player_id: string }[]>(

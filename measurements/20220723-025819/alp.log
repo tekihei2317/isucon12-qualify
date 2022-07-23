@@ -1,0 +1,24 @@
+make[1]: Entering directory '/home/isucon/webapp'
+sudo alp ltsv --file=/var/log/nginx/access.log --sort sum --reverse -o count,method,uri,min,max,sum,avg,p99,1xx,2xx,3xx,4xx,5xx -m "/api/player/competition/\w+/ranking,/api/player/player/\w+,/api/organizer/competition/\w+/score,/api/organizer/competition/\w+/finish,/api/organizer/player/\w+/disqualified"
++-------+--------+----------------------------------------+-------+--------+----------+-------+--------+-----+-----+-----+-----+-----+
+| COUNT | METHOD |                  URI                   |  MIN  |  MAX   |   SUM    |  AVG  |  P99   | 1XX | 2XX | 3XX | 4XX | 5XX |
++-------+--------+----------------------------------------+-------+--------+----------+-------+--------+-----+-----+-----+-----+-----+
+|   618 | GET    | /api/player/competition/\w+/ranking    | 0.004 | 23.632 | 1361.932 | 2.204 | 19.772 |   0 | 588 |   0 |  30 |   0 |
+|   369 | GET    | /api/player/player/\w+                 | 0.004 | 22.948 |  510.660 | 1.384 | 16.164 |   0 | 335 |   0 |  34 |   0 |
+|    52 | POST   | /api/organizer/competition/\w+/score   | 0.232 | 16.056 |  150.748 | 2.899 | 16.056 |   0 |  45 |   0 |   7 |   0 |
+|    20 | GET    | /api/admin/tenants/billing             | 0.664 | 24.708 |   83.485 | 4.174 | 24.708 |   0 |  18 |   0 |   2 |   0 |
+|     7 | POST   | /api/organizer/players/add             | 2.148 |  6.888 |   30.880 | 4.411 |  6.888 |   0 |   7 |   0 |   0 |   0 |
+|    94 | GET    | /api/player/competitions               | 0.004 |  0.120 |    2.993 | 0.032 |  0.120 |   0 |  83 |   0 |  11 |   0 |
+|     1 | POST   | /initialize                            | 2.976 |  2.976 |    2.976 | 2.976 |  2.976 |   0 |   1 |   0 |   0 |   0 |
+|    16 | GET    | /api/organizer/billing                 | 0.004 |  0.668 |    2.520 | 0.158 |  0.668 |   0 |  16 |   0 |   0 |   0 |
+|    36 | POST   | /api/organizer/competitions/add        | 0.008 |  0.076 |    1.340 | 0.037 |  0.076 |   0 |  35 |   0 |   1 |   0 |
+|    32 | POST   | /api/organizer/competition/\w+/finish  | 0.008 |  0.048 |    0.652 | 0.020 |  0.048 |   0 |  31 |   0 |   1 |   0 |
+|    11 | POST   | /api/admin/tenants/add                 | 0.008 |  0.128 |    0.564 | 0.051 |  0.128 |   0 |   6 |   0 |   5 |   0 |
+|    24 | GET    | /api/organizer/players                 | 0.004 |  0.036 |    0.280 | 0.012 |  0.036 |   0 |  24 |   0 |   0 |   0 |
+|    13 | POST   | /api/organizer/player/\w+/disqualified | 0.004 |  0.032 |    0.240 | 0.018 |  0.032 |   0 |  12 |   0 |   1 |   0 |
+|     1 | GET    | /api/organizer/competitions            | 0.004 |  0.004 |    0.004 | 0.004 |  0.004 |   0 |   1 |   0 |   0 |   0 |
+|     1 | GET    | /js/app.3a4ec98c.js                    | 0.000 |  0.000 |    0.000 | 0.000 |  0.000 |   0 |   1 |   0 |   0 |   0 |
+|     1 | GET    | /index.html                            | 0.000 |  0.000 |    0.000 | 0.000 |  0.000 |   0 |   1 |   0 |   0 |   0 |
+|     1 | GET    | /css/app.83b4c321.css                  | 0.000 |  0.000 |    0.000 | 0.000 |  0.000 |   0 |   1 |   0 |   0 |   0 |
++-------+--------+----------------------------------------+-------+--------+----------+-------+--------+-----+-----+-----+-----+-----+
+make[1]: Leaving directory '/home/isucon/webapp'
