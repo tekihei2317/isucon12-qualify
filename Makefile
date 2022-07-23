@@ -1,4 +1,4 @@
-# include env.sh
+include env.sh
 
 # ----- 設定ファイルの取得、反映 -----
 USER=isucon
@@ -35,7 +35,7 @@ reload-nginx:
 	@make deploy-nginx-conf
 	sudo nginx -s reload
 
-APP_SERVICE=TODO:
+APP_SERVICE=isuports.service
 reload-app:
 	sudo systemctl restart $(APP_SERVICE)
 status-app:
@@ -43,16 +43,16 @@ status-app:
 watch-log-app:
 	sudo journalctl -u $(APP_SERVICE) -n 10 -f
 
-MYSQL_SERVICE=TODO:
+MYSQL_SERVICE=mysql.service
 reload-mysql:
 	@make deploy-db-conf
 	sudo systemctl restart $(MYSQL_SERVICE)
 status-mysql:
 	sudo systemctl status $(MYSQL_SERVICE)
 
-MYSQL_USER=TODO:
-MYSQL_PASSWORD=TODO:
-MYSQL_DATABASE=TODO:
+MYSQL_USER=isucon
+MYSQL_PASSWORD=isucon
+MYSQL_DATABASE=isuports
 enter-mysql:
 	mysql -u $(MYSQL_USER) -p$(MYSQL_PASSWORD) -D $(MYSQL_DATABASE)
 
