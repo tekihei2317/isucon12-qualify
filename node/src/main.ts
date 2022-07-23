@@ -530,6 +530,7 @@ function validateTenantName(name: string): boolean {
   return false
 }
 
+// ToDo
 // 大会ごとの課金レポートを計算する
 async function billingReportByCompetition(
   tenantDB: Database,
@@ -548,6 +549,7 @@ async function billingReportByCompetition(
   )
 
   const billingMap: { [playerId: string]: 'player' | 'visitor' } = {}
+  // ToDo remove for
   for (const vh of vhs) {
     // competition.finished_atよりもあとの場合は、終了後に訪問したとみなして大会開催内アクセス済みとみなさない
     if (comp.finished_at !== null && comp.finished_at < vh.min_created_at) {
@@ -565,6 +567,7 @@ async function billingReportByCompetition(
       tenantId,
       comp.id
     )
+    // ToDo remove for
     for (const pid of scoredPlayerIds) {
       // スコアが登録されている参加者
       billingMap[pid.player_id] = 'player'
@@ -576,6 +579,7 @@ async function billingReportByCompetition(
       visitor: 0,
     }
     if (comp.finished_at) {
+      // ToDo remove for
       for (const category of Object.values(billingMap)) {
         switch (category) {
           case 'player':
@@ -604,6 +608,7 @@ async function billingReportByCompetition(
   }
 }
 
+// ToDo
 // SaaS管理者用API
 // テナントごとの課金レポートを最大10件、テナントのid降順で取得する
 // GET /api/admin/tenants/billing
