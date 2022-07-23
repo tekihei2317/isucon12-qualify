@@ -96,7 +96,7 @@ async function dispenseID(): Promise<string> {
   let lastErr: any
   for (const _ of Array(100)) {
     try {
-      const [result] = await adminDB.execute<OkPacket>('REPLACE INTO id_generator (stub) VALUES (?)', ['a'])
+      const [result] = await adminDB.execute<OkPacket>('insert INTO id_generator (stub) VALUES (?)', ['a'])
 
       id = result.insertId
       break
@@ -543,6 +543,28 @@ async function billingReportByCompetition(
   }
 
   const billingMap: { [playerId: string]: 'player' | 'visitor' } = {}
+  
+  // let query: string, array: [number, string, number?];
+  // if (comp.finished_at === null){
+  //   query = 'SELECT COUNT(DISTINCT(player_id)) AS visitor_count FROM visit_history WHERE tenant_id = ? AND competition_id = ?';
+  //   array = [tenantId, comp.id];
+  // }else{
+  //   query = 'SELECT COUNT(DISTINCT(player_id)) AS visitor_count FROM visit_history WHERE tenant_id = ? AND competition_id = ? AND created_at > ?';
+  //   array = [tenantId, comp.id, comp.finished_at];
+  // }
+  // const [query_visitors] = await adminDB.query<({ player_count: number })[]>(query, array)
+
+  // const [query_players] = await tenantDB.all<({ player_count: number })[]>(
+  //   'SELECT COUNT(DISTINCT(player_id)) as player_count FROM player_score WHERE tenant_id = ? AND competition_id = ?',
+  //   [tenantId, comp.id]
+  // )
+
+  // const visitors = query_visitors[0];
+  // const players = query_players[0];
+  // console.log("visitors: "+query_visitors);
+  // console.log("players: "+query_players);
+  // console.log("visitors: "+visitors);
+  // console.log("players: "+players);
 
   // ランキングにアクセスした参加者のIDを取得する
   const [vhs] = await adminDB.query<(VisitHistorySummaryRow & RowDataPacket)[]>(
@@ -551,9 +573,6 @@ async function billingReportByCompetition(
   )
 
   // ToDo remove for
-
-  // if (comp.finished_at == null) {
-  // }
   for (const vh of vhs) {
     // competition.finished_atよりもあとの場合は、終了後に訪問したとみなして大会開催内アクセス済みとみなさない
     if (comp.finished_at !== null && comp.finished_at < vh.min_created_at) {
@@ -606,6 +625,15 @@ async function billingReportByCompetition(
       billing_visitor_yen: 10 * counts.visitor,
       billing_yen: 100 * counts.player + 10 * counts.visitor,
     }
+    // return {
+    //   competition_id: comp.id,
+    //   competition_title: comp.title,
+    //   player_count: players,
+    //   visitor_count: visitors,
+    //   billing_player_yen: 100 * players,
+    //   billing_visitor_yen: 10 * players,
+    //   billing_yen: 100 * players + 10 * visitors,
+    // }
   } catch (error) {
     throw new Error(`error Select count player_score: tenantId=${tenantId}, competitionId=${comp.id}, ${error}`)
   } finally {
