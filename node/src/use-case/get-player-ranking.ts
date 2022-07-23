@@ -60,21 +60,26 @@ export async function getPlayerRanking (req: Request, res: Response)  {
       // player_scoreを読んでいるときに更新が走ると不整合が起こるのでロックを取得する
       const unlock = await flockByTenantID(tenant.id)
       try {
+        // const pss = await tenantDB.all<PlayerScoreRow[]>(
+        //   'SELECT * FROM player_score WHERE tenant_id = ? AND competition_id = ? ORDER BY row_num DESC',
+        //   tenant.id,
+        //   competition.id
+        // )
         const pss = await tenantDB.all<PlayerScoreRow[]>(
-          'SELECT * FROM player_score WHERE tenant_id = ? AND competition_id = ? ORDER BY row_num DESC',
+          'SELECT player_id, MAX(row_num) as row_num, score FROM player_score WHERE tenant_id = ? AND competition_id = ? GROUP BY player_id',
           tenant.id,
           competition.id
         )
 
-        const scoredPlayerSet: { [player_id: string]: number } = {}
+        // const scoredPlayerSet: { [player_id: string]: number } = {}
         const tmpRanks: (CompetitionRank & WithRowNum)[] = []
         for (const ps of pss) {
           // player_scoreが同一player_id内ではrow_numの降順でソートされているので
           // 現れたのが2回目以降のplayer_idはより大きいrow_numでスコアが出ているとみなせる
-          if (scoredPlayerSet[ps.player_id]) {
-            continue
-          }
-          scoredPlayerSet[ps.player_id] = 1
+          // if (scoredPlayerSet[ps.player_id]) {
+          //   continue
+          // }
+          // scoredPlayerSet[ps.player_id] = 1
           const p = await retrievePlayer(tenantDB, ps.player_id)
           if (!p) {
             throw new Error('error retrievePlayer')
