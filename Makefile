@@ -67,7 +67,7 @@ clear-logs:
 before-bench: clear-logs reload-app watch-log-app
 
 ALPSORT=sum
-ALPM="/api/player/competition/\w+/ranking,/api/player/player/\w+,/api/organizer/competition/\w+/score,/api/organizer/competition/\w+/finish,/api/organizer/player/\w+/disqualified"
+ALPM="/api/player/competition/[a-z0-9-]+/ranking,/api/player/player/\w+,/api/organizer/competition/[a-z0-9-]+/score,/api/organizer/competition/[a-z0-9-]+/finish,/api/organizer/player/[a-z0-9-]+/disqualified"
 OUTFORMAT=count,method,uri,min,max,sum,avg,p99,1xx,2xx,3xx,4xx,5xx
 .PHONY: alp
 alp:

@@ -13,6 +13,7 @@ import { open, Database } from 'sqlite'
 import { openSync, closeSync } from 'fs'
 import fsExt from 'fs-ext'
 import { parse } from 'csv-parse/sync'
+import { v4 as uuidv4 } from 'uuid'
 
 import { useSqliteTraceHook } from './sqltrace'
 
@@ -92,26 +93,27 @@ async function createTenantDB(id: number): Promise<Error | undefined> {
 
 // システム全体で一意なIDを生成する
 async function dispenseID(): Promise<string> {
-  let id = 0
-  let lastErr: any
-  for (const _ of Array(100)) {
-    try {
-      const [result] = await adminDB.execute<OkPacket>('insert INTO id_generator (stub) VALUES (?)', ['a'])
+  // let id = 0
+  // let lastErr: any
+  // for (const _ of Array(100)) {
+  //   try {
+  //     const [result] = await adminDB.execute<OkPacket>('insert INTO id_generator (stub) VALUES (?)', ['a'])
 
-      id = result.insertId
-      break
-    } catch (error: any) {
-      // deadlock
-      if (error.errno && error.errno === 1213) {
-        lastErr = error
-      }
-    }
-  }
-  if (id !== 0) {
-    return id.toString(16)
-  }
+  //     id = result.insertId
+  //     break
+  //   } catch (error: any) {
+  //     // deadlock
+  //     if (error.errno && error.errno === 1213) {
+  //       lastErr = error
+  //     }
+  //   }
+  // }
+  // if (id !== 0) {
+  //   return id.toString(16)
+  // }
 
-  throw new Error(`error REPLACE INTO id_generator: ${lastErr.toString()}`)
+  // throw new Error(`error REPLACE INTO id_generator: ${lastErr.toString()}`)
+  return uuidv4();
 }
 
 // カスタムエラーハンドラにステータスコード拾ってもらうエラー型
@@ -543,28 +545,36 @@ async function billingReportByCompetition(
   }
 
   const billingMap: { [playerId: string]: 'player' | 'visitor' } = {}
-  
-  // let query: string, array: [number, string, number?];
-  // if (comp.finished_at === null){
-  //   query = 'SELECT COUNT(DISTINCT(player_id)) AS visitor_count FROM visit_history WHERE tenant_id = ? AND competition_id = ?';
-  //   array = [tenantId, comp.id];
-  // }else{
-  //   query = 'SELECT COUNT(DISTINCT(player_id)) AS visitor_count FROM visit_history WHERE tenant_id = ? AND competition_id = ? AND created_at > ?';
-  //   array = [tenantId, comp.id, comp.finished_at];
+  // let visitors = 0, players = 0;
+  // if(comp.finished_at) {
+  //   let query: string, array: [number, string, number?];
+  //   if (comp.finished_at === null){
+  //     query = 'SELECT player_id AS visitor_ids FROM visit_history WHERE tenant_id = ? AND competition_id = ?  GROUP BY player_id';
+  //     array = [tenantId, comp.id];
+  //   }else{
+  //     query = 'SELECT player_id AS visitor_ids FROM visit_history WHERE tenant_id = ? AND competition_id = ? AND created_at <= ?  GROUP BY player_id';
+  //     array = [tenantId, comp.id, comp.finished_at];
+  //   }
+  //   const [query_visitors] = await adminDB.query<(VisitHistorySummaryRow & RowDataPacket)[]>(query, array)
+
+  //   const query_players = await tenantDB.all<({ player_id: string })[]>(
+  //     'SELECT DISTINCT(player_id) as player_id FROM player_score WHERE tenant_id = ? AND competition_id = ?',
+  //     [tenantId, comp.id]
+  //   )
+  //   const players_array = query_players.map(player => player.player_id);
+  //   let visitors_array = query_visitors;
+
+  //   visitors_array = visitors_array.filter((visitor) => {
+  //     return players_array.includes(visitor.player_id);
+  //   });
+
+  //   visitors = visitors_array.length;
+  //   players = players_array.length;
   // }
-  // const [query_visitors] = await adminDB.query<({ player_count: number })[]>(query, array)
-
-  // const [query_players] = await tenantDB.all<({ player_count: number })[]>(
-  //   'SELECT COUNT(DISTINCT(player_id)) as player_count FROM player_score WHERE tenant_id = ? AND competition_id = ?',
-  //   [tenantId, comp.id]
-  // )
-
-  // const visitors = query_visitors[0];
-  // const players = query_players[0];
-  // console.log("visitors: "+query_visitors);
-  // console.log("players: "+query_players);
-  // console.log("visitors: "+visitors);
-  // console.log("players: "+players);
+  // console.log("visitors: "+JSON.stringify(query_visitors));
+  // console.log("players: "+JSON.stringify(query_players));
+  // console.log("visitors[0]: "+visitors);
+  // console.log("players[0]: "+players);
 
   // ランキングにアクセスした参加者のIDを取得する
   const [vhs] = await adminDB.query<(VisitHistorySummaryRow & RowDataPacket)[]>(

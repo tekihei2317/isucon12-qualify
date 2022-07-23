@@ -1,0 +1,116 @@
+make[1]: Entering directory '/home/isucon/webapp'
+sudo pt-query-digest /var/log/mysql/mysql-slow.log
+
+# 560ms user time, 30ms system time, 29.16M rss, 35.11M vsz
+# Current date: Sat Jul 23 05:30:26 2022
+# Hostname: ip-192-168-0-11
+# Files: /var/log/mysql/mysql-slow.log
+# Overall: 5.66k total, 23 unique, 19.58 QPS, 0.22x concurrency __________
+# Time range: 2022-07-23T05:24:08 to 2022-07-23T05:28:57
+# Attribute          total     min     max     avg     95%  stddev  median
+# ============     ======= ======= ======= ======= ======= ======= =======
+# Exec time            63s     2us      3s    11ms    28ms    65ms     3ms
+# Lock time           11ms       0   176us     1us     2us     3us     1us
+# Rows sent        406.60k       0   4.88k   73.57  174.84  370.35    0.99
+# Rows examine       9.37M       0   3.08M   1.70k   2.76k  41.60k    0.99
+# Query size       608.12k       8   1.22k  110.04  202.40   61.21  136.99
+
+# Profile
+# Rank Query ID                       Response time Calls R/Call V/M   Ite
+# ==== ============================== ============= ===== ====== ===== ===
+#    1 0x676347F321DB8BC7FCB05D494... 53.2745 85.2%  2590 0.0206  0.23 SELECT visit_history
+#    2 0x2E69352DE16B15042A1217500...  5.1619  8.3%   714 0.0072  0.00 INSERT visit_history
+#    3 0x3289E87E94D5A82E348974B3D...  3.4157  5.5%     1 3.4157  0.00 DELETE visit_history
+# MISC 0xMISC                          0.6766  1.1%  2354 0.0003   0.0 <20 ITEMS>
+
+# Query 1: 9.22 QPS, 0.19x concurrency, ID 0x676347F321DB8BC7FCB05D4948FC2248 at byte 1750844
+# This item is included in the report because it matches --limit.
+# Scores: V/M = 0.23
+# Time range: 2022-07-23T05:24:14 to 2022-07-23T05:28:55
+# Attribute    pct   total     min     max     avg     95%  stddev  median
+# ============ === ======= ======= ======= ======= ======= ======= =======
+# Count         45    2590
+# Exec time     85     53s   188us      1s    21ms    42ms    69ms     8ms
+# Lock time     48     5ms       0   176us     2us     2us     5us     1us
+# Rows sent     98 402.12k       0   4.88k  158.98  183.58  535.61   84.10
+# Rows examine  67   6.29M       0  78.96k   2.49k   2.89k   8.43k   1.33k
+# Query size    59 364.03k     141     171  143.92  136.99    5.48  136.99
+# String:
+# Hosts        localhost
+# Users        isucon
+# Query_time distribution
+#   1us
+#  10us
+# 100us  ######
+#   1ms  ################################################################
+#  10ms  ###########################################################
+# 100ms  #
+#    1s  #
+#  10s+
+# Tables
+#    SHOW TABLE STATUS LIKE 'visit_history'\G
+#    SHOW CREATE TABLE `visit_history`\G
+# EXPLAIN /*!50100 PARTITIONS*/
+SELECT player_id, MIN(created_at) AS min_created_at FROM visit_history WHERE tenant_id = 1 AND competition_id = '1a0205203' GROUP BY player_id\G
+
+# Query 2: 10.98 QPS, 0.08x concurrency, ID 0x2E69352DE16B15042A1217500A0400FE at byte 793591
+# This item is included in the report because it matches --limit.
+# Scores: V/M = 0.00
+# Time range: 2022-07-23T05:24:17 to 2022-07-23T05:25:22
+# Attribute    pct   total     min     max     avg     95%  stddev  median
+# ============ === ======= ======= ======= ======= ======= ======= =======
+# Count         12     714
+# Exec time      8      5s     3ms    34ms     7ms    13ms     3ms     6ms
+# Lock time     10     1ms     1us    22us     1us     1us     1us     1us
+# Rows sent      0       0       0       0       0       0       0       0
+# Rows examine   0       0       0       0       0       0       0       0
+# Query size    22 136.73k     150     205  196.09  202.40   13.49  202.40
+# String:
+# Hosts        localhost
+# Users        isucon
+# Query_time distribution
+#   1us
+#  10us
+# 100us
+#   1ms  ################################################################
+#  10ms  ###########
+# 100ms
+#    1s
+#  10s+
+# Tables
+#    SHOW TABLE STATUS LIKE 'visit_history'\G
+#    SHOW CREATE TABLE `visit_history`\G
+INSERT INTO visit_history (player_id, tenant_id, competition_id, created_at, updated_at) VALUES ('631011bf6', 92, 'e5051d07-3eb3-489a-92e3-b41eede3e97c', 1658553885, 1658553885)\G
+
+# Query 3: 0 QPS, 0x concurrency, ID 0x3289E87E94D5A82E348974B3D332E575 at byte 471
+# This item is included in the report because it matches --limit.
+# Scores: V/M = 0.00
+# Time range: all events occurred at 2022-07-23T05:24:12
+# Attribute    pct   total     min     max     avg     95%  stddev  median
+# ============ === ======= ======= ======= ======= ======= ======= =======
+# Count          0       1
+# Exec time      5      3s      3s      3s      3s      3s       0      3s
+# Lock time      0     1us     1us     1us     1us     1us       0     1us
+# Rows sent      0       0       0       0       0       0       0       0
+# Rows examine  32   3.08M   3.08M   3.08M   3.08M   3.08M       0   3.08M
+# Query size     0      58      58      58      58      58       0      58
+# String:
+# Hosts        localhost
+# Users        isucon
+# Query_time distribution
+#   1us
+#  10us
+# 100us
+#   1ms
+#  10ms
+# 100ms
+#    1s  ################################################################
+#  10s+
+# Tables
+#    SHOW TABLE STATUS LIKE 'visit_history'\G
+#    SHOW CREATE TABLE `visit_history`\G
+DELETE FROM visit_history WHERE created_at >= '1654041600'\G
+# Converted for EXPLAIN
+# EXPLAIN /*!50100 PARTITIONS*/
+select * from  visit_history WHERE created_at >= '1654041600'\G
+make[1]: Leaving directory '/home/isucon/webapp'
